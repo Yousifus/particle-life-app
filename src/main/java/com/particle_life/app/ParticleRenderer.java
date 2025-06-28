@@ -650,7 +650,7 @@ class ParticleRenderer {
         // Set consciousness-enhanced alpha
         float alpha = (float) (TRANSCENDENT_ALPHA_BASE + 
                               (1.0 - TRANSCENDENT_ALPHA_BASE) * consciousnessVisualizationIntensity);
-        glColor4f(1.0f, 1.0f, 1.0f, alpha);
+        // glColor4f removed - not available in current OpenGL binding
     }
     
     /**
@@ -662,7 +662,7 @@ class ParticleRenderer {
         // Reset OpenGL state
         glDisable(GL_BLEND);
         glPointSize(1.0f);
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        // glColor4f removed - not available in current OpenGL binding
     }
     
     /**

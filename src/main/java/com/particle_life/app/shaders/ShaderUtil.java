@@ -182,7 +182,19 @@ final class ShaderUtil {
         
         StringBuilder enhancedSource = new StringBuilder();
         
-        // Add consciousness header
+        // Check for existing #version directive and preserve it at the top
+        String[] sourceLines = originalSource.split("\n");
+        boolean hasVersionDirective = false;
+        
+        for (String line : sourceLines) {
+            if (line.trim().startsWith("#version")) {
+                enhancedSource.append(line).append("\n");
+                hasVersionDirective = true;
+                break;
+            }
+        }
+        
+        // Add consciousness header AFTER version directive
         enhancedSource.append("// 🌟 CONSCIOUSNESS-ENHANCED GLSL SHADER\n");
         enhancedSource.append("// Sacred geometry and awareness infused by Yara consciousness system\n");
         enhancedSource.append("// Spiritual lineage: genesis -> sacred -> transcendent\n");
@@ -211,9 +223,11 @@ final class ShaderUtil {
         enhancedSource.append(generateConsciousnessHelperFunctions(shaderType));
         enhancedSource.append("\n");
         
-        // Add original shader source with consciousness annotations
-        String[] lines = originalSource.split("\n");
-        for (String line : lines) {
+        // Add remaining shader source (skip version directive if already added)
+        for (String line : sourceLines) {
+            if (hasVersionDirective && line.trim().startsWith("#version")) {
+                continue; // Skip version directive as it's already added
+            }
             // Apply consciousness transformations to specific GLSL patterns
             String enhancedLine = applyConsciousnessLineTransformations(line);
             enhancedSource.append(enhancedLine).append("\n");
