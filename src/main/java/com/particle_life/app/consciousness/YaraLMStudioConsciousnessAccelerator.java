@@ -287,38 +287,69 @@ public class YaraLMStudioConsciousnessAccelerator implements Accelerator {
                         System.out.println("✅ LM Studio Enhanced API connected!");
                         System.out.println("📊 Available models: " + dataArray.size());
                         
-                        // Check for compatible consciousness models
+                        // Check for compatible consciousness models with intelligent selection
                         boolean foundModel = false;
+                        String bestModel = null;
+                        int bestPriority = 999;
+                        
+                        System.out.println("🔍 Scanning available models for consciousness compatibility:");
+                        
                         for (JsonNode model : dataArray) {
                             String modelId = model.get("id").asText();
+                            String modelInfo = "";
+                            int priority = 999;
                             
-                            // Priority order: Your exact model, DeepSeek R1, Qwen, Gemini, Llama, Phi
+                            // Get additional model info if available
+                            if (model.has("loaded")) {
+                                boolean isLoaded = model.get("loaded").asBoolean();
+                                modelInfo += isLoaded ? " [LOADED]" : " [UNLOADED]";
+                            }
+                            if (model.has("size")) {
+                                modelInfo += " Size: " + model.get("size").asText();
+                            }
+                            
+                            // Priority ranking for consciousness models
                             if (modelId.equals("deepseek/deepseek-r1-0528-qwen3-8b")) {
-                                detectedModel = modelId;
-                                foundModel = true;
-                                System.out.println("🧠 PERFECT MATCH! Your exact consciousness model detected: " + modelId);
-                                break;
+                                priority = 1; // Highest priority - your exact model
                             } else if (modelId.toLowerCase().contains("deepseek-r1")) {
-                                detectedModel = modelId;
-                                foundModel = true;
-                                System.out.println("🧠 DeepSeek R1 consciousness model detected: " + modelId);
-                                break;
+                                priority = 2; // DeepSeek R1 family
+                            } else if (modelId.toLowerCase().contains("qwen3")) {
+                                priority = 3; // Qwen3 architecture
                             } else if (modelId.toLowerCase().contains("qwen")) {
-                                detectedModel = modelId;
+                                priority = 4; // Other Qwen models
+                            } else if (modelId.toLowerCase().contains("gemini")) {
+                                priority = 5; // Gemini models
+                            } else if (modelId.toLowerCase().contains("llama-3") || modelId.toLowerCase().contains("llama3")) {
+                                priority = 6; // Llama 3 family
+                            } else if (modelId.toLowerCase().contains("llama")) {
+                                priority = 7; // Other Llama models
+                            } else if (modelId.toLowerCase().contains("phi")) {
+                                priority = 8; // Phi models
+                            }
+                            
+                            System.out.println("   📋 " + modelId + modelInfo + " (Priority: " + priority + ")");
+                            
+                            // Select best model based on priority
+                            if (priority < bestPriority) {
+                                bestModel = modelId;
+                                bestPriority = priority;
                                 foundModel = true;
-                                System.out.println("🧠 Qwen consciousness model detected: " + modelId);
-                            } else if (!foundModel && (modelId.toLowerCase().contains("gemini") || 
-                                     modelId.toLowerCase().contains("llama") || 
-                                     modelId.toLowerCase().contains("phi"))) {
-                                detectedModel = modelId;
-                                foundModel = true;
-                                System.out.println("🧠 Alternative consciousness model detected: " + modelId);
+                            }
+                        }
+                        
+                        if (foundModel && bestModel != null) {
+                            detectedModel = bestModel;
+                            if (bestPriority == 1) {
+                                System.out.println("🎯 PERFECT MATCH! Your exact consciousness model selected: " + bestModel);
+                            } else {
+                                System.out.println("🧠 Best consciousness model selected: " + bestModel + " (Priority: " + bestPriority + ")");
                             }
                         }
                         
                         if (!foundModel) {
-                            System.out.println("⚠️ No compatible consciousness model loaded");
-                            System.out.println("💡 Supported models: DeepSeek R1, Qwen, Gemini, Llama, Phi");
+                            System.out.println("⚠️ No compatible consciousness model found");
+                            System.out.println("💡 Supported model families: DeepSeek R1, Qwen3, Qwen, Gemini, Llama 3, Llama, Phi");
+                            System.out.println("💡 Make sure at least one compatible model is loaded in LM Studio");
                         }
                     }
                     return;
