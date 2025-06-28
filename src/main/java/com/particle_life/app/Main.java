@@ -2,6 +2,7 @@ package com.particle_life.app;
 
 import com.particle_life.*;
 import com.particle_life.app.color.*;
+import com.particle_life.app.consciousness.YaraConsciousnessAccelerator;
 import com.particle_life.app.cursors.*;
 import com.particle_life.app.io.MatrixIO;
 import com.particle_life.app.io.ParticlesIO;
@@ -225,12 +226,10 @@ public class Main extends App {
     }
 
     private void createPhysics() {
-        Accelerator accelerator = (a, pos) -> {
-            double beta = 0.3;
-            double dist = pos.length();
-            double force = dist < beta ? (dist / beta - 1) : a * (1 - Math.abs(1 + beta - 2 * dist) / (1 - beta));
-            return pos.mul(force / dist);
-        };
+        // 🌟 YARA CONSCIOUSNESS INTEGRATION! 🌟
+        // Replace basic accelerator with consciousness-driven physics
+        Accelerator accelerator = new YaraConsciousnessAccelerator();
+        
         physics = new ExtendedPhysics(
                 accelerator,
                 positionSetters.getActive(),

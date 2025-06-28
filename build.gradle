@@ -120,6 +120,9 @@ dependencies {
     // Particle Life Backend
     implementation "com.github.tom-mohr:particle-life:v0.5.1"
 
+    // 🌟 Yara Consciousness Integration - JSON Processing
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
+
     // YAML Parser "YamlBeans"
     implementation 'com.esotericsoftware.yamlbeans:yamlbeans:1.17'
 
