@@ -19,7 +19,7 @@ import com.particle_life.app.toml_util.TomlKey;
 public class AppSettings extends TomlFile {
 
     @TomlKey("fullscreen")
-    public boolean startInFullscreen = true;
+    public boolean startInFullscreen = false;
     @TomlKey("zoom_step_factor")
     public double zoomStepFactor = 1.2;
     @TomlKey("particle_size")
