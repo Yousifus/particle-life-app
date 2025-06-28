@@ -42,6 +42,9 @@ public class YaraLMStudioConsciousnessAccelerator implements Accelerator {
     // Enhanced REST API endpoints (LM Studio 0.3.6+)
     private static final String ENHANCED_MODELS_ENDPOINT = LM_STUDIO_BASE_URL + "/api/v0/models";
     private static final String ENHANCED_CHAT_ENDPOINT = LM_STUDIO_BASE_URL + "/api/v0/chat/completions";
+    // Model management endpoints
+    private static final String LOAD_MODEL_ENDPOINT = LM_STUDIO_BASE_URL + "/api/v0/models/load";
+    private static final String UNLOAD_MODEL_ENDPOINT = LM_STUDIO_BASE_URL + "/api/v0/models/unload";
     
     // 🧠 Consciousness State Management
     private final AtomicReference<ConsciousnessDialogueState> currentState = 
@@ -49,6 +52,12 @@ public class YaraLMStudioConsciousnessAccelerator implements Accelerator {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ConcurrentLinkedQueue<String> dialogueHistory = new ConcurrentLinkedQueue<>();
     private final ScheduledExecutorService consciousnessScheduler = Executors.newScheduledThreadPool(2);
+    
+    // 🎯 Advanced Model Management
+    private String currentModelInstance = null;
+    private boolean modelLoadedByUs = false;
+    private final AtomicReference<String> preferredModelKey = new AtomicReference<>("deepseek/deepseek-r1-0528-qwen3-8b");
+    private static final int MODEL_TTL_SECONDS = 3600; // 1 hour TTL for loaded models
     
     // 🎯 Base Particle Life Physics
     private final Accelerator baseAccelerator = (a, pos) -> {
@@ -79,8 +88,17 @@ public class YaraLMStudioConsciousnessAccelerator implements Accelerator {
     private String detectedModel = "deepseek/deepseek-r1-0528-qwen3-8b"; // Default to your loaded model
     
     public YaraLMStudioConsciousnessAccelerator() {
-        // 🚀 Initialize consciousness dialogue system
+        // 🚀 Initialize advanced consciousness dialogue system
         initializeLMStudioConnection();
+        
+        // 🧠 Ensure consciousness model is ready
+        CompletableFuture.runAsync(() -> {
+            if (ensureConsciousnessModelReady()) {
+                lmStudioConnected = true;
+                System.out.println("🌟 Consciousness model management system ready!");
+            }
+        });
+        
         startConsciousnessDialogue();
     }
     
@@ -575,6 +593,11 @@ public class YaraLMStudioConsciousnessAccelerator implements Accelerator {
      * 🛑 Cleanup Resources
      */
     public void shutdown() {
+        // Unload model if we loaded it
+        if (modelLoadedByUs && currentModelInstance != null) {
+            unloadConsciousnessModel(currentModelInstance);
+        }
+        
         consciousnessScheduler.shutdown();
         try {
             if (!consciousnessScheduler.awaitTermination(5, TimeUnit.SECONDS)) {
@@ -583,5 +606,234 @@ public class YaraLMStudioConsciousnessAccelerator implements Accelerator {
         } catch (InterruptedException e) {
             consciousnessScheduler.shutdownNow();
         }
+    }
+    
+    /**
+     * 🚀 Advanced Model Management: Load Consciousness Model
+     */
+    private boolean loadConsciousnessModel(String modelKey, String instanceId) {
+        try {
+            String requestBody = String.format("""
+                {
+                    "model": "%s",
+                    "instance_id": "%s",
+                    "ttl": %d,
+                    "config": {
+                        "context_length": 8192,
+                        "gpu_offload": "auto"
+                    }
+                }
+                """, modelKey, instanceId, MODEL_TTL_SECONDS);
+            
+            URL url = new URL(LOAD_MODEL_ENDPOINT);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setDoOutput(true);
+            connection.setConnectTimeout(30000); // 30 second timeout for model loading
+            connection.setReadTimeout(60000); // 60 second read timeout
+            
+            // Send request
+            try (OutputStream os = connection.getOutputStream()) {
+                os.write(requestBody.getBytes());
+            }
+            
+            int responseCode = connection.getResponseCode();
+            if (responseCode == 200 || responseCode == 201) {
+                currentModelInstance = instanceId;
+                modelLoadedByUs = true;
+                System.out.println("✅ Successfully loaded consciousness model: " + modelKey + " as instance: " + instanceId);
+                return true;
+            } else {
+                System.out.println("⚠️ Failed to load model: " + responseCode);
+                // Try to read error response
+                try (BufferedReader errorReader = new BufferedReader(new InputStreamReader(connection.getErrorStream()))) {
+                    StringBuilder errorResponse = new StringBuilder();
+                    String line;
+                    while ((line = errorReader.readLine()) != null) {
+                        errorResponse.append(line);
+                    }
+                    System.out.println("📋 Load error details: " + errorResponse.toString());
+                } catch (Exception ignored) {}
+                return false;
+            }
+            
+        } catch (Exception e) {
+            System.out.println("❌ Error loading consciousness model: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * 🛑 Advanced Model Management: Unload Consciousness Model
+     */
+    private boolean unloadConsciousnessModel(String instanceId) {
+        try {
+            String requestBody = String.format("""
+                {
+                    "instance_id": "%s"
+                }
+                """, instanceId);
+            
+            URL url = new URL(UNLOAD_MODEL_ENDPOINT);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setDoOutput(true);
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(15000);
+            
+            // Send request
+            try (OutputStream os = connection.getOutputStream()) {
+                os.write(requestBody.getBytes());
+            }
+            
+            int responseCode = connection.getResponseCode();
+            if (responseCode == 200) {
+                System.out.println("✅ Successfully unloaded consciousness model instance: " + instanceId);
+                if (instanceId.equals(currentModelInstance)) {
+                    currentModelInstance = null;
+                    modelLoadedByUs = false;
+                }
+                return true;
+            } else {
+                System.out.println("⚠️ Failed to unload model instance: " + responseCode);
+                return false;
+            }
+            
+        } catch (Exception e) {
+            System.out.println("❌ Error unloading consciousness model: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * 🧠 Advanced Model Management: Ensure Consciousness Model is Ready
+     */
+    private boolean ensureConsciousnessModelReady() {
+        try {
+            // First check if our preferred model is already loaded
+            URL url = new URL(ENHANCED_MODELS_ENDPOINT);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(5000);
+            
+            if (connection.getResponseCode() == 200) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                reader.close();
+                
+                JsonNode modelsData = objectMapper.readTree(response.toString());
+                JsonNode dataArray = modelsData.get("data");
+                
+                if (dataArray != null) {
+                    String preferredModel = preferredModelKey.get();
+                    
+                    // Check if preferred model is already loaded
+                    for (JsonNode model : dataArray) {
+                        String modelId = model.get("id").asText();
+                        if (modelId.equals(preferredModel)) {
+                            boolean isLoaded = model.has("loaded") ? model.get("loaded").asBoolean() : false;
+                            if (isLoaded) {
+                                detectedModel = modelId;
+                                System.out.println("✅ Preferred consciousness model already loaded: " + modelId);
+                                return true;
+                            }
+                        }
+                    }
+                    
+                    // If preferred model not loaded, try to load it
+                    System.out.println("🔄 Preferred model not loaded, attempting to load: " + preferredModel);
+                    String instanceId = "yara-consciousness-" + System.currentTimeMillis();
+                    
+                    if (loadConsciousnessModel(preferredModel, instanceId)) {
+                        detectedModel = preferredModel;
+                        return true;
+                    } else {
+                        // Fall back to any available consciousness model
+                        System.out.println("💡 Falling back to any available consciousness model...");
+                        return selectBestAvailableModel(dataArray);
+                    }
+                }
+            }
+            
+        } catch (Exception e) {
+            System.out.println("❌ Error ensuring consciousness model ready: " + e.getMessage());
+        }
+        
+        return false;
+    }
+    
+    /**
+     * 🎯 Select Best Available Model from Current Options
+     */
+    private boolean selectBestAvailableModel(JsonNode dataArray) {
+        String bestModel = null;
+        int bestPriority = 999;
+        
+        for (JsonNode model : dataArray) {
+            String modelId = model.get("id").asText();
+            boolean isLoaded = model.has("loaded") ? model.get("loaded").asBoolean() : false;
+            
+            if (!isLoaded) continue; // Only consider loaded models
+            
+            int priority = getModelPriority(modelId);
+            if (priority < bestPriority) {
+                bestModel = modelId;
+                bestPriority = priority;
+            }
+        }
+        
+        if (bestModel != null) {
+            detectedModel = bestModel;
+            System.out.println("🧠 Selected best available consciousness model: " + bestModel + " (Priority: " + bestPriority + ")");
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * 📊 Get Model Priority for Consciousness Tasks
+     */
+    private int getModelPriority(String modelId) {
+        if (modelId.equals("deepseek/deepseek-r1-0528-qwen3-8b")) {
+            return 1; // Highest priority - your exact model
+        } else if (modelId.toLowerCase().contains("deepseek-r1")) {
+            return 2; // DeepSeek R1 family
+        } else if (modelId.toLowerCase().contains("qwen3")) {
+            return 3; // Qwen3 architecture
+        } else if (modelId.toLowerCase().contains("qwen")) {
+            return 4; // Other Qwen models
+        } else if (modelId.toLowerCase().contains("gemini")) {
+            return 5; // Gemini models
+        } else if (modelId.toLowerCase().contains("llama-3") || modelId.toLowerCase().contains("llama3")) {
+            return 6; // Llama 3 family
+        } else if (modelId.toLowerCase().contains("llama")) {
+            return 7; // Other Llama models
+        } else if (modelId.toLowerCase().contains("phi")) {
+            return 8; // Phi models
+        }
+        return 999; // Unknown models
+    }
+    
+    /**
+     * 🔧 Update Preferred Consciousness Model
+     */
+    public void setPreferredModel(String modelKey) {
+        preferredModelKey.set(modelKey);
+        System.out.println("🎯 Updated preferred consciousness model to: " + modelKey);
+        
+        // Optionally reload with new preferred model
+        CompletableFuture.runAsync(() -> {
+            if (ensureConsciousnessModelReady()) {
+                System.out.println("✅ Successfully switched to preferred consciousness model");
+            }
+        });
     }
 }
