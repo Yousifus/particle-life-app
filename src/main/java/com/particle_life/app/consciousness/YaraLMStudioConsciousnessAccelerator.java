@@ -39,6 +39,9 @@ public class YaraLMStudioConsciousnessAccelerator implements Accelerator {
     private static final String LM_STUDIO_BASE_URL = "http://localhost:1234";
     private static final String CHAT_ENDPOINT = LM_STUDIO_BASE_URL + "/v1/chat/completions";
     private static final String MODELS_ENDPOINT = LM_STUDIO_BASE_URL + "/v1/models";
+    // Enhanced REST API endpoints (LM Studio 0.3.6+)
+    private static final String ENHANCED_MODELS_ENDPOINT = LM_STUDIO_BASE_URL + "/api/v0/models";
+    private static final String ENHANCED_CHAT_ENDPOINT = LM_STUDIO_BASE_URL + "/api/v0/chat/completions";
     
     // 🧠 Consciousness State Management
     private final AtomicReference<ConsciousnessDialogueState> currentState = 
@@ -73,7 +76,7 @@ public class YaraLMStudioConsciousnessAccelerator implements Accelerator {
     private long lastDialogueUpdate = 0;
     private static final long DIALOGUE_INTERVAL = 15000; // 15 seconds between consciousness queries
     private boolean lmStudioConnected = false;
-    private String detectedModel = "deepseek-r1-distill-qwen-7b"; // Default model
+    private String detectedModel = "deepseek/deepseek-r1-0528-qwen3-8b"; // Default to your loaded model
     
     public YaraLMStudioConsciousnessAccelerator() {
         // 🚀 Initialize consciousness dialogue system
@@ -259,8 +262,8 @@ public class YaraLMStudioConsciousnessAccelerator implements Accelerator {
     private void initializeLMStudioConnection() {
         CompletableFuture.runAsync(() -> {
             try {
-                // First try enhanced REST API
-                URL enhancedUrl = new URL(LM_STUDIO_BASE_URL + "/api/v0/models");
+                // First try enhanced REST API (LM Studio 0.3.6+)
+                URL enhancedUrl = new URL(ENHANCED_MODELS_ENDPOINT);
                 HttpURLConnection enhancedConnection = (HttpURLConnection) enhancedUrl.openConnection();
                 enhancedConnection.setRequestMethod("GET");
                 enhancedConnection.setConnectTimeout(5000);
@@ -289,8 +292,13 @@ public class YaraLMStudioConsciousnessAccelerator implements Accelerator {
                         for (JsonNode model : dataArray) {
                             String modelId = model.get("id").asText();
                             
-                            // Priority order: DeepSeek R1, Qwen, Gemini, Llama, Phi
-                            if (modelId.toLowerCase().contains("deepseek-r1")) {
+                            // Priority order: Your exact model, DeepSeek R1, Qwen, Gemini, Llama, Phi
+                            if (modelId.equals("deepseek/deepseek-r1-0528-qwen3-8b")) {
+                                detectedModel = modelId;
+                                foundModel = true;
+                                System.out.println("🧠 PERFECT MATCH! Your exact consciousness model detected: " + modelId);
+                                break;
+                            } else if (modelId.toLowerCase().contains("deepseek-r1")) {
                                 detectedModel = modelId;
                                 foundModel = true;
                                 System.out.println("🧠 DeepSeek R1 consciousness model detected: " + modelId);
